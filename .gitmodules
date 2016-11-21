@@ -1,3 +1,6 @@
 [submodule "drawlib"]
 	path = drawlib
 	url = https://github.com/o0v0o/tripping-happiness
+[submodule "lobject"]
+	path = lobject
+	url = https://github.com/o080o/lobject
