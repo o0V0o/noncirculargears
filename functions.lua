@@ -14,6 +14,11 @@ function F.Function.__mul(f,g)
 	return F.Multiplication(f,g)
 end
 
+function F.normalize(f, period, value)
+	local integration = f:integrate(period)
+	return f*(value/integration)
+end
+
 F.Multiplication = class(F.Function)
 function F.Multiplication:__init(f,g)
 	self.f=f
@@ -41,7 +46,7 @@ function F.Addition:integrate(t)
 	return self.f:integrate(t) + self.g:integrate(t)
 end
 function F.Addition:get(t)
-	return self.f:get(t) + self.g.get(t)
+	return self.f:get(t) + self.g:get(t)
 end
 
 F.Sine = class(F.Function)

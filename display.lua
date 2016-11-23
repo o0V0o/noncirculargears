@@ -9,12 +9,16 @@ local Shader = require("shader")
 local PointCloud = require'pointcloud'
 local Polyline = require'polyline'
 
+local Quaternion = require("quaternion")
+local Matrix = require("matrix")
+local Functions = require'functions'
+
 local vec2, vec3, vec4 = Vector.vec2, Vector.vec3, Vector.vec4
 print("loaded modules")
 
 --setup camera
 local camera = Camera( 0.001, 100, 45 )
-camera.position = vec3(0,0,-10)
+camera.position = vec3(0,0,-20)
 camera:lookat(vec3(0,0,0))
 
 --load shaders
@@ -37,24 +41,27 @@ ptShader.view = camera.view
 ptShader.perspective = camera.perspective
 
 return function(gear1, gear2)
-	shape1 = Polyline(gear1)
-	shape2 = Polyline(gear2)
-	local theta = 0
+	print(gear1, gear2)
+	local shape1 = Polyline(gear1.profile)
+	local shape2 = Polyline(gear2.profile)
+	local t = 0
 	local function render()
 		collectgarbage() --by gc'ing every frame, we get (higer) more consistent framerates (23 vs 30 fps)
 		countFrames()
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT + gl.GL_DEPTH_BUFFER_BIT)
-
+	
+		t=t+0.1
 
 		ptShader:use()
 
-		ptShader.model = gear1transform
-		ptShader.color = {1,1,1}
-		gear1:draw(ptShader)
 
-		ptShader.model = gear2transform
+		ptShader.model = gear1:transform(t)
+		ptShader.color = {1,1,1}
+		shape1:draw(ptShader)
+
+		ptShader.model = gear2:transform(t)
 		ptShader.color = {0.15,0.6,1}
-		gear2:draw(ptShader)
+		shape2:draw(ptShader)
 
 		js.global:requestAnimationFrame(render)
 	end

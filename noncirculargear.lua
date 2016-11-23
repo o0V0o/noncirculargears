@@ -1,6 +1,6 @@
 local class = require'lobject'
-local Quaternion = require'drawlib.quaternion'
-local Vector = require'drawlib.vector'
+local Quaternion = require'drawlib/quaternion'
+local Vector = require'drawlib/vector'
 local vec3 = Vector.vec3
 
 
@@ -19,10 +19,15 @@ end
 
 local GearSet = class()
 
-local function calcPitch(t, speed1, speed2, distance)
-	local theta = speed1:integrate(t)
-	local ratio = math.abs(speed1:get(t)/speed2:get(t))
-	local pitch = ratio*distance
+function calcPitch(t, speed1, speed2, distance)
+	local s1, s2 = speed1:get(t), speed2:get(t)
+	local ratio = math.abs(s2/s1)
+	local pitch = (ratio*distance)/(1+ratio)
+	return pitch
+end
+local function plot(t, pitch, speed1, offset)
+	local theta = speed1:integrate(t) + (offset or 0)
+	theta = theta * -1
 	return vec3(math.cos(theta)*pitch, math.sin(theta)*pitch, 0)
 end
 function GearSet:__init(speed1, speed2, distance, steps)
@@ -36,8 +41,11 @@ function GearSet:__init(speed1, speed2, distance, steps)
 	local pitchCurve2 = {}
 	for i=1,steps do
 		t = t + stepsize
-		table.insert(pitchCurve1, calcPitch( t, speed1, speed2, distance))
-		table.insert(pitchCurve2, calcPitch( t, speed2, speed1, distance))
+		table.insert(pitchCurve1, plot(t, calcPitch( t, speed1, speed2, distance), speed1))
+		table.insert(pitchCurve2, plot(t, -calcPitch( t, speed2, speed1, distance), speed2))
+	end
+	for i=1, steps do
+		print(pitchCurve1[i]:len()+pitchCurve2[i]:len())
 	end
 	self.pitchCurve1 = pitchCurve1
 	self.pitchCurve2 = pitchCurve2
