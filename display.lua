@@ -8,7 +8,7 @@ local Camera = require("camera")
 local Shader = require("shader")
 local PointCloud = require'pointcloud'
 local Polyline = require'polyline'
-local Lines = require'lines'
+local Lines = require'polyline'
 
 local vec2, vec3, vec4 = Vector.vec2, Vector.vec3, Vector.vec4
 print("loaded modules")
@@ -54,7 +54,7 @@ return function(gear1, gear2)
 		countFrames()
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT + gl.GL_DEPTH_BUFFER_BIT)
 	
-		t=t+0.1
+		t=t+0.01
 
 		ptShader:use() --mem. leak?!?!?
 		test:test()

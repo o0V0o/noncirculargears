@@ -19,6 +19,15 @@ function Gear:transform(t)
 	local theta = self.speed:integrate(t)
 	return Quaternion.axisAngle( self.up, theta ):matrix():translate(self.center)
 end
+function Gear:export()
+	local str = {}
+	for k,v in pairs(self.profile) do
+		table.insert(str, tostring(v))
+		table.insert(str, ",\n")
+	end
+	print(table.concat(str))
+	return table.concat(str)
+end
 
 local GearSet = class()
 
@@ -61,9 +70,43 @@ local function calcPerimeter(pitch)
 	return sum
 end
 
-local function cutTeeth(pitch, tooth, nteeth, addendum, dedendum)
-	local gear = cag.Polygon(pitch)
-	local gearything = gear
+local function expand(pitch, distance)
+	local newpitch = {}
+	for i,point in pairs(pitch) do
+		newpitch[i] = point:copy():normalize():scale(distance):add(point)
+	end
+	return newpitch
+end
+local function rotateAround(shape, point, angle)
+	angle = angle * 180/math.pi
+	shape = shape:translate( csg.Vector3D(point*-1) )
+	shape = shape:rotateZ(angle)
+	shape = shape:translate( csg.Vector3D(point) )
+	return shape
+end
+local function cutMatingGear(pitch, speed1,  gear, speed2, distance, addendum, stepsize, step)
+	local mate = cag.Polygon(expand(pitch, addendum))
+	local gearything = cag.Polygon(pitch)
+
+	step = false
+	local center = vec3(-distance, 0, 0)
+	gear = gear:translate( csg.Vector3D(center) )
+	for t=0,2*math.pi,stepsize do
+		local angle1 = speed1:integrate(t)
+		local angle2 = speed2:integrate(t)
+		mate = mate:rotateZ((angle1)*180/math.pi)
+		gear = rotateAround(gear, center, (angle2))
+		mate = mate:subtract(gear)
+		if step then coroutine.yield(mate, gear, gearything) end
+		gear = rotateAround(gear, center, (-angle2))
+		mate = mate:rotateZ((-angle1)*180/math.pi)
+	end
+	return mate, gear, gearything
+end
+local function cutTeeth(pitch, tooth, nteeth, addendum, step)
+
+	local gear = cag.Polygon(expand(pitch, addendum))
+	local gearything = cag.Polygon(pitch)
 	local perimeter = calcPerimeter(pitch)
 	local toothSize = perimeter/nteeth
 
@@ -78,20 +121,13 @@ local function cutTeeth(pitch, tooth, nteeth, addendum, dedendum)
 		rack = rack:union(tooth)
 	end
 
-	local function rotateAround(shape, point, angle)
-		angle = angle * 180/math.pi
-		shape = shape:translate( csg.Vector3D(point*-1) )
-		shape = shape:rotateZ(angle)
-		shape = shape:translate( csg.Vector3D(point) )
-		return shape
-	end
 
 	--for t=0,2*math.pi,0.1 do
 	--for t=0, 360, 10 do
 	local lastPoint = pitch[#pitch]
 	print("!",lastPoint)
 	local transformedRack = rack:translate( csg.Vector3D(lastPoint) )
-	coroutine.yield(gear, transformedRack)
+	--coroutine.yield(gear, transformedRack)
 	local zero = vec3(-1,0,0)
 	local lastSegment = zero
 	for i=1,2 do
@@ -102,7 +138,7 @@ local function cutTeeth(pitch, tooth, nteeth, addendum, dedendum)
 
 			transformedRack = rotateAround(transformedRack, lastPoint, -angle)
 			gear = gear:subtract(transformedRack)
-			--coroutine.yield(gear, transformedRack, gearything)
+			if step then coroutine.yield(gear, transformedRack, gearything) end
 			lastPoint = point
 			lastSegment = segment
 		end
@@ -112,10 +148,10 @@ local function cutTeeth(pitch, tooth, nteeth, addendum, dedendum)
 end
 
 local function involuteTooth(addendum, dedendum, pressureAngle)
-	return cag.Polygon( {vec3(0, 0, 0), vec3(-1, 0, 0), vec3(-0.5, addendum+dedendum, 0)} )
+	return cag.Polygon( {vec3(-0.5, addendum, 0), vec3(0, -dedendum, 0), vec3(0, -2*(dedendum+addendum), 0), vec3(-1, -2*(addendum+dedendum), 0), vec3(-1, -dedendum, 0)})
 end
 
-function GearSet:__init(speed2, speed1, distance, nteeth, steps)
+function GearSet:__init(speed2, speed1, distance, nteeth, steps, animate)
 	steps = steps or 100
 	print(speed1, speed2, distance, steps)
 	speed2=speed2*-1
@@ -143,20 +179,27 @@ function GearSet:__init(speed2, speed1, distance, nteeth, steps)
 	--js.global:jsAddViewer(viewer)
 	
 	local blah = function(polygon)
-		local pts = cag.toLines(polygon)
+		local pts = cag.toPolyline(polygon)
 		for i,pt in pairs(pts) do
 			pts[i] = vec3(pt[1], pt[2], 0)
 		end
 		return pts
 	end
 	local co = coroutine.create(cutTeeth)
-	coroutine.resume(co, pitchCurve1, tooth, nteeth, addendum, dedendum)
-	local ok, gear = coroutine.resume(co, pitchCurve1, tooth, nteeth, addendum, dedendum)
+	local ok, gear = coroutine.resume(co, pitchCurve1, tooth, nteeth, addendum, false)
+	if not ok then print( gear ) end
 
+	local gear1, gear2 = gear
+	--used to do cutting animations.
 	function self:step()
 		local ok, gear, rack, extra
 		if coroutine.status(co) ~= 'dead' then 
 			ok, gear, rack, extra = coroutine.resume(co)
+			if not gear2 then gear1=gear else gear2=gear end
+		else
+			co = coroutine.create(cutMatingGear)
+			ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
+			gear2 = gear
 		end
 		if not ok or not gear or not rack then
 			print(ok, gear, rack)
@@ -165,9 +208,16 @@ function GearSet:__init(speed2, speed1, distance, nteeth, steps)
 		end
 	end
 
+
 	self.pitchCurve1 = pitchCurve1
 	self.pitchCurve2 = pitchCurve2
-	self.gears = {Gear(speed1, blah(gear), vec3(0,0,0)), Gear(speed2, pitchCurve2, vec3(distance, 0, 0))}
+	if not animate then
+		local co = coroutine.create(cutMatingGear)
+		local ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
+		print(ok, gear, rack)
+		gear2 = gear
+		self.gears = {Gear(speed1, blah(gear1), vec3(0,0,0)), Gear(speed2, blah(gear2), vec3(distance, 0, 0))}
+	end
 end
 
 return GearSet

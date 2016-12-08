@@ -39,14 +39,16 @@ ptShader.view = camera.view
 ptShader.perspective = camera.perspective
 
 
-return function(gearset)
+return function(gearset, stepanim)
 	local gear, rack, extra
 	local shape1 = Lines()
 	local shape2 = Lines()
 	local shape3 = Lines()
 	local t = 0
 
+	local stepped=false
 	local step = function()
+			stepped = true
 			print("working...")
 			local newgear, newrack, newextra = gearset:step()
 			gear, rack, extra = newgear or gear, newrack or rack, newextra or extra
@@ -61,7 +63,9 @@ return function(gearset)
 		--countFrames()
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT + gl.GL_DEPTH_BUFFER_BIT)
 
-		--step()
+		if stepanim and stepped then
+			step()
+		end
 	
 		t=t+0.1
 
