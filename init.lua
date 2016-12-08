@@ -3,7 +3,8 @@ print("path:", package.path)
 js.global.console:log("path:", package.path)
 
 require("httploader")
-require'strict'({"js", "calcPitch"})
+require'strict'
+--require'strict'({"js", "calcPitch"})
 
 
 
