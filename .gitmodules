@@ -4,3 +4,9 @@
 [submodule "lobject"]
 	path = lobject
 	url = https://github.com/o080o/lobject
+[submodule "csg.js"]
+	path = csg.js
+	url = https://github.com/evanw/csg.js.git
+[submodule "OpenSCAD.jscad"]
+	path = OpenSCAD.jscad
+	url = https://github.com/Spiritdude/OpenSCAD.jscad.git

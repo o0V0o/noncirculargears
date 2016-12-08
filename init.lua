@@ -10,6 +10,9 @@ local Functions = require'functions'
 
 
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1)+2, 6)
-local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+1.5, math.pi*2, 2*math.pi), 6)
+local offset = 1.5
+local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+offset, math.pi*2, 2*math.pi), 6, 25, 30)
+--local gearset = GearSet(Functions.Constant(1), Functions.Constant(1), 6, 4)
 
+--require'cutanim'(gearset)
 require'display'(gearset.gears[1], gearset.gears[2])

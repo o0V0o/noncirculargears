@@ -17,7 +17,7 @@ function Polyline:draw(shader)
 			self.vbos[mesh_attrib]:useForAttribute(attribute)
 		end
 	end
-	gl.glDrawElements( gl.GL_LINE_STRIP, #(self.inds), self.eab.datatype, 0)
+	gl.glDrawElements( gl.GL_LINES, #(self.inds), self.eab.datatype, 0)
 	self.eab:unbind()
 end
 return Polyline

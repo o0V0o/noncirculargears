@@ -11,6 +11,22 @@ function PointCloud:__init(points)
 	self.mesh = Mesh(self.inds, {position=self.points})
 	self.dirty = true
 end
+function PointCloud:setPoints(points)
+	--note that we have to keep the same self.points and self.inds table
+	--instances. so we can't set self.points = points. We have to copy
+	--the table element by element.
+	
+	-- delete existing points
+	for i,_ in pairs(self.points) do
+		self.points[i] = nil
+	end
+	--and add new ones.
+	for i, point in ipairs(points) do
+		self.points[i] = point
+		self.inds[i] = i-1
+	end
+	self.dirty = true
+end
 function PointCloud:addPoints(points)
 	for _,p in ipairs(points) do
 		self:add(p)

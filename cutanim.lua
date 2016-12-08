@@ -4,6 +4,7 @@ package.path = "/drawlib/?.lua;?.lua"
 require("httploader")
 local gl = require("openGL")
 local Vector = require("vector")
+local Matrix = require("matrix")
 local Camera = require("camera")
 local Shader = require("shader")
 local PointCloud = require'pointcloud'
@@ -37,36 +38,46 @@ shader.attenuation = {0.9, 0.8}
 ptShader.view = camera.view
 ptShader.perspective = camera.perspective
 
-return function(gear1, gear2)
-	print(gear1, gear2)
-	local shape1 = Lines(gear1.profile)
-	local shape2 = Lines(gear2.profile)
+
+return function(gearset)
+	local gear, rack, extra
+	local shape1 = Lines()
+	local shape2 = Lines()
+	local shape3 = Lines()
 	local t = 0
 
-	local mything = {}
-	local test = {test=function(self)
-		if self==mything then return end
-		mything = self
-	end}
+	local step = function()
+			print("working...")
+			local newgear, newrack, newextra = gearset:step()
+			gear, rack, extra = newgear or gear, newrack or rack, newextra or extra
+			shape1:setPoints(gear)
+			shape2:setPoints(rack)
+			shape3:setPoints(extra)
+	end
+	require'eventhandler'('next', 'click', step)
 
 	local function render()
 		collectgarbage() --by gc'ing every frame, we get (higer) more consistent framerates (23 vs 30 fps)
-		countFrames()
+		--countFrames()
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT + gl.GL_DEPTH_BUFFER_BIT)
+
+		--step()
 	
 		t=t+0.1
 
-		ptShader:use() --mem. leak?!?!?
-		test:test()
+
+		ptShader:use()
 
 
-		ptShader.model = gear1:transform(t)
+		ptShader.model = Matrix.identity(4)
 		ptShader.color = {1,1,1}
 		shape1:draw(ptShader)
 
-		ptShader.model = gear2:transform(t)
 		ptShader.color = {0.15,0.6,1}
 		shape2:draw(ptShader)
+
+		ptShader.color = {0.15,1,0.6}
+		shape3:draw(ptShader)
 
 		js.global:requestAnimationFrame(render)
 	end
