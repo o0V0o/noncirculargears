@@ -1,7 +1,3 @@
--- need to add the path to our drawing library
-package.path = "/drawlib/?.lua;?.lua"
--- and add a way to *load* said library.
-require("httploader")
 local gl = require("openGL")
 local Vector = require("vector")
 local Camera = require("camera")
