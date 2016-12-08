@@ -1,5 +1,5 @@
 
-package.path = package.path..";?/init.lua;?.lua;/drawlib/?lua;drawlib/?.lua"
+package.path = package.path..";?/init.lua;?.lua;/drawlib/?.lua;drawlib/?.lua"
 require("httploader")
 require'strict'({"js", "calcPitch"})
 
