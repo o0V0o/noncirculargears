@@ -31,7 +31,7 @@ end
 
 local GearSet = class()
 
-function calcPitch(t, speed1, speed2, distance)
+local function calcPitch(t, speed1, speed2, distance)
 	local s1, s2 = speed1:get(t), speed2:get(t)
 	local ratio = math.abs(s2/s1)
 	local pitch = (ratio*distance)/(1+ratio)
