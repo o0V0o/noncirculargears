@@ -11,14 +11,14 @@ require'strict'
 local GearSet = require'noncirculargear'
 local Functions = require'functions'
 
-local anim = false
+local anim = true
 local step = false
 
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1)+2, 6)
 local offset = 1.5
 
 -- sin wave gear
-local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+offset, math.pi*2, 2*math.pi), 6, 25, 30, anim)
+--local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+offset, math.pi*2, 2*math.pi), 6, 25, 30, anim)
 
 --circular gear.
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1), 6, 4)
