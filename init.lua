@@ -11,7 +11,7 @@ require'strict'
 local GearSet = require'noncirculargear'
 local Functions = require'functions'
 
-local anim = true
+local anim = false
 local step = false
 
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1)+2, 6)
