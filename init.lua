@@ -23,8 +23,9 @@ local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sin
 --circular gear.
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1), 6, 4)
 
+local slow, fast = 0.5, 1.5
 -- triangle wave gear
-local gearset = GearSet(  Functions.Constant(1), Functions.normalize(Functions.LinearSpline( { vec2(0, slow), vec2(math.pi, fast), vec2(math.pi*2, slow)}), math.pi*2, math.pi*2), 6, 25, 30, anim)
+local gearset = GearSet(  Functions.Constant(1), Functions.normalize(Functions.LinearSpline( { {x=0, y=slow}, {x=math.pi, y=fast}, {x=math.pi*2, y=slow}}), math.pi*2, math.pi*2), 6, 25, 30, anim)
 
 if anim then
 	require'cutanim'(gearset, true)
