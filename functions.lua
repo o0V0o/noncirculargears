@@ -57,6 +57,14 @@ function F.Sine:get(t)
 	return math.sin(t)
 end
 
+F.SineSquared = class(F.Function)
+function F.SineSquared:integrate(x)
+	return (1/4)*(2*x-math.sin(2*x))
+end
+function F.SineSquared:get(t)
+	return math.sin(t)*math.sin(t)
+end
+
 F.Periodic = class(F.Function)
 function F.Periodic:__init(func, period)
 	self.func = func

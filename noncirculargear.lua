@@ -13,7 +13,11 @@ function Gear:__init(speed, profile, center)
 	self.speed = speed --a function of time
 	self.profile = profile
 	self.center = center
+	self.shift = 0
 	self.up = vec3(0,0,1)
+end
+function Gear:shift(t)
+	self.shift = t
 end
 function Gear:transform(t)
 	local theta = self.speed:integrate(t)
@@ -21,10 +25,15 @@ function Gear:transform(t)
 end
 function Gear:export()
 	local str = {}
+	table.insert(str, "points = [")
 	for k,v in pairs(self.profile) do
+		table.insert(str, "FreeCAD.Vector")
 		table.insert(str, tostring(v))
 		table.insert(str, ",\n")
 	end
+	table.insert(str, "]\n")
+	table.insert(str, "Draft.makeBSpline( points, closed=True )\n")
+
 	print(table.concat(str))
 	return table.concat(str)
 end
@@ -151,8 +160,9 @@ local function involuteTooth(addendum, dedendum, pressureAngle)
 	return cag.Polygon( {vec3(-0.5, addendum, 0), vec3(0, -dedendum, 0), vec3(0, -2*(dedendum+addendum), 0), vec3(-1, -2*(addendum+dedendum), 0), vec3(-1, -dedendum, 0)})
 end
 
-function GearSet:__init(speed2, speed1, distance, nteeth, steps, animate)
+function GearSet:__init(speed2, speed1, distance, nteeth, steps, animate, cut)
 	steps = steps or 100
+
 	print(speed1, speed2, distance, steps)
 	speed2=speed2*-1
 	--now we calculate the pitch curve of the two gears
@@ -168,55 +178,60 @@ function GearSet:__init(speed2, speed1, distance, nteeth, steps, animate)
 
 	--local shape = js.global.CSG:cube()
 
-	local gear = cag.Polygon(pitchCurve1)
-
-	local addendum, dedendum = .3, .3
-	local tooth = involuteTooth(addendum, dedendum)
 
 	--tooth = tooth:extrude({})
 	--js.global.tooth = tooth
 	--local viewer =  js.new( js.global.Viewer, tooth, 500, 500, 15)
 	--js.global:jsAddViewer(viewer)
+	--
 	
-	local blah = function(polygon)
-		local pts = cag.toPolyline(polygon)
-		for i,pt in pairs(pts) do
-			pts[i] = vec3(pt[1], pt[2], 0)
-		end
-		return pts
-	end
-	local co = coroutine.create(cutTeeth)
-	local ok, gear = coroutine.resume(co, pitchCurve1, tooth, nteeth, addendum, false)
-	if not ok then print( gear ) end
-
-	local gear1, gear2 = gear
-	--used to do cutting animations.
-	function self:step()
-		local ok, gear, rack, extra
-		if coroutine.status(co) ~= 'dead' then 
-			ok, gear, rack, extra = coroutine.resume(co)
-			if not gear2 then gear1=gear else gear2=gear end
-		else
-			co = coroutine.create(cutMatingGear)
-			ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
-			gear2 = gear
-		end
-		if not ok or not gear or not rack then
-			print(ok, gear, rack)
-		else
-			return blah(gear), blah(rack), blah(extra or rack)
-		end
-	end
-
-
 	self.pitchCurve1 = pitchCurve1
 	self.pitchCurve2 = pitchCurve2
-	if not animate then
-		local co = coroutine.create(cutMatingGear)
-		local ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
-		print(ok, gear, rack)
-		gear2 = gear
-		self.gears = {Gear(speed1, blah(gear1), vec3(0,0,0)), Gear(speed2, blah(gear2), vec3(distance, 0, 0))}
+	if not cut then
+		self.gears = {Gear(speed1, pitchCurve1, vec3(0,0,0)), Gear(speed2, pitchCurve2, vec3(distance, 0, 0))}
+	else
+		local gear = cag.Polygon(pitchCurve1)
+		local addendum, dedendum = .3, .3
+		local tooth = involuteTooth(addendum, dedendum)
+
+		local blah = function(polygon)
+			local pts = cag.toPolyline(polygon)
+			for i,pt in pairs(pts) do
+				pts[i] = vec3(pt[1], pt[2], 0)
+			end
+			return pts
+		end
+		local co = coroutine.create(cutTeeth)
+		local ok, gear = coroutine.resume(co, pitchCurve1, tooth, nteeth, addendum, false)
+		if not ok then print( gear ) end
+
+		local gear1, gear2 = gear
+		--used to do cutting animations.
+		function self:step()
+			local ok, gear, rack, extra
+			if coroutine.status(co) ~= 'dead' then 
+				ok, gear, rack, extra = coroutine.resume(co)
+				if not gear2 then gear1=gear else gear2=gear end
+			else
+				co = coroutine.create(cutMatingGear)
+				ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
+				gear2 = gear
+			end
+			if not ok or not gear or not rack then
+				print(ok, gear, rack)
+			else
+				return blah(gear), blah(rack), blah(extra or rack)
+			end
+		end
+
+
+		if not animate then
+			local co = coroutine.create(cutMatingGear)
+			local ok, gear, rack, extra = coroutine.resume(co, pitchCurve2, speed2, gear1, speed1, distance, addendum, .1, animate)
+			print(ok, gear, rack)
+			gear2 = gear
+			self.gears = {Gear(speed1, blah(gear1), vec3(0,0,0)), Gear(speed2, blah(gear2), vec3(distance, 0, 0))}
+		end
 	end
 end
 
