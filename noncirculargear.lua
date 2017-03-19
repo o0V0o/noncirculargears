@@ -25,6 +25,7 @@ function Gear:transform(t)
 end
 function Gear:export()
 	local str = {}
+	table.insert(str, "import FreeCAD, Draft\n")
 	table.insert(str, "points = [")
 	for k,v in pairs(self.profile) do
 		table.insert(str, "FreeCAD.Vector")
@@ -32,7 +33,13 @@ function Gear:export()
 		table.insert(str, ",\n")
 	end
 	table.insert(str, "]\n")
-	table.insert(str, "Draft.makeBSpline( points, closed=True )\n")
+	table.insert(str,
+[[s=4.0
+for i in range(points.length):
+	points[i] = points[i]*s
+shape = Draft.makeWire(points. closed=True)
+]])
+	table.insert(str, "shape = Draft.makeWire(points, closed=True)\n")
 
 	print(table.concat(str))
 	return table.concat(str)

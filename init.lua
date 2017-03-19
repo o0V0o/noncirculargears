@@ -13,13 +13,13 @@ local GearSet = require'noncirculargear'
 local Functions = require'functions'
 
 local anim = false
-local step = false
+local step = true
 
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1)+2, 6)
 local offset = 1.5
 
 -- sin wave gear
---local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+offset, math.pi*2, 2*math.pi), 6, 25, 30, anim)
+--local gearset = GearSet(Functions.Constant(1), Functions.normalize(Functions.Sine()+offset, math.pi*2, 2*math.pi), 6, 25, 30, anim, true)
 
 --circular gear.
 --local gearset = GearSet(Functions.Constant(1), Functions.Constant(1), 6, 4)
@@ -33,9 +33,9 @@ local gearset = GearSet(
 --]]
 
 
-local slow, fast = 0.5, 2
+local slow, fast = 0.45, 1.6
 -- triangle wave gear
-local gearset = GearSet(  Functions.Constant(1), Functions.normalize(Functions.Periodic(Functions.LinearSpline( { {x=0, y=slow}, {x=math.pi, y=fast}, {x=math.pi*2, y=slow}}), math.pi*2), math.pi*2, math.pi*2), 6, 25, 30, anim)
+local gearset = GearSet(  Functions.Constant(1), Functions.normalize(Functions.Periodic(Functions.LinearSpline( { {x=0, y=slow}, {x=math.pi, y=fast}, {x=math.pi*2, y=slow}}), math.pi*2), math.pi*2, math.pi*2), 6, 20, 30, anim, true)
 
 if anim then
 	require'cutanim'(gearset, true)
