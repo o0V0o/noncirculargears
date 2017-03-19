@@ -12,6 +12,8 @@ local event = require'eventhandler'
 local GearSet = require'noncirculargear'
 local Functions = require'functions'
 
+js.global.document:getElementById("loading").style.display = 'none'
+
 local anim = false
 local step = true
 

@@ -15,7 +15,7 @@
 	    border-color: black;
 		border-style: solid;
 		border-width: 5px;
-		float: left;
+		display: inline-block;
 }
 </style>
 
@@ -24,6 +24,7 @@
 	  <p class='button' id='d2'> download (blue)</p>
 	  <p class='button' id='d1'> download (white)</p>
 	  <br><p</p><br>
+	  <h1 id='loading'> loading.. please wait (may take some time) </h1>
     <!-- MAIN CONTENT -->
 	<div id=0 class='viewer'></div>
 	<div id=1 class='viewer'></div>
@@ -39,22 +40,27 @@
 	<script src='csg_glue.js'></script>
 	<script src='drawlib/glue.js'></script>
 	<script src='drawlib/lua.vm.js'></script>
-	<script type="text/lua">
-		xpcall( function()
-			require'init'
-		end,
-		function(msg)
-			if type(msg)=='userdata' then
-				msg = tostring(msg)
-			end
-			local str = debug.traceback()
-			local color = "Tomato"
-			local bgc = "White"
-			js.global.console:log("%c" .. msg, "color:" .. color .. ";font-weight:bold; background-color: " .. bgc .. ";");
-			js.global.console:log("")
-			js.global.console:log("%c" .. str, "color:" .. color .. ";font-weight:bold; background-color: " .. bgc .. ";");
-			 
-		end)
+	<!--<script type="text/lua">-->
+	<script type="text/javascript">
+		setTimeout(function(){
+			L.execute(`
+			xpcall( function()
+				require'init'
+			end,
+			function(msg)
+				if type(msg)=='userdata' then
+					msg = tostring(msg)
+				end
+				local str = debug.traceback()
+				local color = 'Tomato'
+				local bgc = 'White'
+				js.global.console:log('%c' .. msg, 'color:' .. color .. ';font-weight:bold; background-color: ' .. bgc .. ';');
+				js.global.console:log('')
+				js.global.console:log('%c' .. str, 'color:' .. color .. ';font-weight:bold; background-color: ' .. bgc .. ';');
+				 
+			end)`)
+		}, 100)
+
 	</script>
 
 	</body>
